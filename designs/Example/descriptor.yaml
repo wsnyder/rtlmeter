@@ -1,0 +1,38 @@
+origin:
+  - repository: local
+    revision: local
+    licenses:
+      - ../../LICENSE
+
+compile:
+  verilogSourceFiles:
+    - src/top.v
+  topModule: top
+  mainClock: top.clk
+
+execute:
+  tests:
+    hello:
+      # Run without any arguments
+    user:
+      args:
+        - "+greeting=Howdy User"
+
+configurations:
+  kind:
+    compile:
+      # Nothing to add to 'compile' - can be omitted
+    execute:
+      # Add an extra test to 'execute'
+      tests:
+        friend:
+          args:
+            - "+greeting=Hi Friend"
+  loud:
+    compile:
+      # Add an extra C++ source file, and an extra Verilog define
+      cppSourceFiles:
+        - src/toupper.cpp
+      verilogDefines:
+        ALL_CAPS: 1
+
