@@ -389,7 +389,7 @@ def rawdataMain(args: argparse.Namespace) -> None:
 
 def collateMain(args: argparse.Namespace) -> None:
     # Include the current date and time
-    now = datetime.datetime.now(datetime.UTC)
+    now = datetime.datetime.now(datetime.UTC).replace(microsecond=0)
 
     # Include git revsion or RTLMeter
     rltmeterVersion = subprocess.run(
@@ -444,7 +444,7 @@ def collateMain(args: argparse.Namespace) -> None:
 
     # Assemble final record
     result = {
-        "date": now.strftime("%Y/%m/%d-%H:%M:%S"),
+        "date": now.isoformat(),
         "RTLMeterVersion": rltmeterVersion,
         "VerilatorVersion": verilatorVersion,
         "cpuinfo": cpuinfo,
