@@ -453,6 +453,10 @@ def collateMain(args: argparse.Namespace) -> None:
         "cases": caseData,
     }
 
+    # Add run name provided on command line
+    if args.runName is not None:
+        result["runName"] = args.runName
+
     @final
     class Encoder(json.JSONEncoder):
         def default(self, o):
@@ -591,6 +595,13 @@ def addSubcommands(subparsers) -> None:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     collateParser.set_defaults(entryPoint=collateMain)
+    collateParser.add_argument(
+        "--runName",  #
+        help="Add 'runName' entry to output",
+        type=str,
+        metavar="NAME",
+        default=None,
+    )
     collateParser.add_argument(
         "dir",
         help="Work directory of run",
