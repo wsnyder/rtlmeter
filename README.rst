@@ -46,3 +46,10 @@ Documentation
 
 Please see the published User and Developer
 `documentation <https://verilator.github.io/rtlmeter/>`_.
+
+Nightly metrics
+===============
+
+Performance metrics collected from the nightly Verilator CI runs are accessible
+through the `Verilator RTLMeter results
+<https://verilator.github.io/verilator-rtlmeter-results/>`_ dashboard.
