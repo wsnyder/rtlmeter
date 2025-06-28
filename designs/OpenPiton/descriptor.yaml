@@ -298,7 +298,6 @@ compile:
   mainClock: cmp_top.core_ref_clk
   verilatorArgs:
     - --autoflush
-    - -Wno-BLKANDNBLK
 
 execute:
   common:

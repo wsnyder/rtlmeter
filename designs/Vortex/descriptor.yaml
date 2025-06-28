@@ -155,7 +155,6 @@ compile:
   topModule: tb
   mainClock: tb.clk
   verilatorArgs:
-    - -Wno-BLKANDNBLK
     - --autoflush
 
 execute:

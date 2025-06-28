@@ -427,7 +427,6 @@ compile:
     - --autoflush
     - --timescale
     - 1ns/1ns
-    - -Wno-BLKANDNBLK
 
 execute:
   common:
