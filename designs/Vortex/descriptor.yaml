@@ -219,7 +219,7 @@ configurations:
         NUM_THREADS: 8
     execute:
       common:
-        tags:  [ large, long, flaky ]
+        tags:  [ large, long ]
       tests:
         sgemm:
           args: [ +iterations=1 ]
