@@ -1,0 +1,17 @@
+{
+  "NVDLA:default"             : "--threads 4",
+  "OpenPiton:4x4"             : "--threads 4",
+  "OpenPiton:8x8"             : "--threads 4",
+  "OpenTitan:default"         : "--threads 4",
+  "VeeR-EH2:asic"             : "--threads 4",
+  "VeeR-EH2:default"          : "--threads 4",
+  "VeeR-EH2:hiperf"           : "--threads 4",
+  "Vortex:sane"               : "--threads 4",
+  "Vortex:huge"               : "--threads 4",
+  "XiangShan:default-chisel3" : "--threads 4",
+  "XiangShan:default-chisel6" : "--threads 4",
+  "XiangShan:mini-chisel3"    : "--threads 4",
+  "XiangShan:mini-chisel6"    : "--threads 4",
+  "XuanTie-C906:default"      : "--threads 4",
+  "XuanTie-C910:default"      : "--threads 4"
+}

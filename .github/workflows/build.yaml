@@ -18,16 +18,21 @@ name: Build
 
 on:
   push:
+    branches:
+      - main
   pull_request:
   workflow_dispatch:
 
 concurrency:
-  group: "build"
+  group: ${{ github.workflow }}-${{ github.actor }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
-  build:
+  check:
+    name: "Check RTLMeter"
     runs-on: ubuntu-24.04
+    outputs:
+      cases: ${{ steps.gatherCases.outputs.cases }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,3 +55,98 @@ jobs:
         run: ./rtlmeter validate
       - name: Spellcheck
         run: make spellcheck
+      - name: Gather cases for run
+        id: gatherCases
+        run: |
+          # Gather all configurations into a JSON list
+          echo "cases=[" >> cases.json
+          ./rtlmeter show --cases | grep ":" | sed 's/:[^:]*$/",/' | sed 's/^/"/' | sort -u | sed "$ s/,//" >> cases.json
+          echo "]" >> cases.json
+          # Remove those that do not fit the runner memory
+          sed -i "/OpenPiton:16x16/d" cases.json
+          sed -i "/OpenPiton:32x32/d" cases.json
+          # Set output variable
+          cat cases.json
+          tr "\n" " " < cases.json >> "$GITHUB_OUTPUT"
+
+  build-verilator:
+    name: "Build Verilator"
+    needs: check # Not really a dependency, but don't bother if 'check' fails
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        cxx:
+          - g++
+          - clang++
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install ccache mold help2man libfl-dev libgoogle-perftools-dev libsystemc-dev
+      - name: Checkout Verilator
+        uses: actions/checkout@v4
+        with:
+          repository: "verilator/verilator"
+          path: verilator
+      - name: Configure
+        working-directory: verilator
+        run: |
+          autoconf
+          ./configure --prefix="$PWD/install" CXX=${{ matrix.cxx }}
+      - name: Make
+        working-directory: verilator
+        run: make -j $(nproc)
+      - name: Install
+        working-directory: verilator
+        run: make install
+      - name: Tar up installation
+        working-directory: verilator
+        run: tar --posix -c -z -f verilator-${{ matrix.cxx }}.tar.gz install
+      - name: Upload Verilator installation archive
+        uses: actions/upload-artifact@v4
+        with:
+          path: verilator/verilator-${{ matrix.cxx }}.tar.gz
+          name: verilator-${{ matrix.cxx }}
+
+  run-with-verilator:
+    name: Run
+    needs:
+      - check
+      - build-verilator
+    runs-on: ubuntu-24.04
+    strategy:
+      max-parallel: 8
+      matrix:
+        cxx:
+          - g++
+          - clang++
+        case: ${{ fromJson(needs.check.outputs.cases) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: rtlmeter
+      - name: Setup venv
+        working-directory: rtlmeter
+        run: make venv
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install ccache mold
+      - name: Download Verilator installation archive
+        uses: actions/download-artifact@v4
+        with:
+          name: verilator-${{ matrix.cxx }}
+      - name: Unpack Verilator installation archive
+        run: |
+          tar -x -z -f verilator-${{ matrix.cxx }}.tar.gz
+          ls -la
+      - name: Run
+        working-directory: rtlmeter
+        run: |
+          export PATH="$PWD/../install/bin:$PATH"
+          ./rtlmeter run --cases="${{ matrix.case }}*" --compileArgs="$(jq -r '.["${{ matrix.case }}"] // empty' ci/compileArgs.json)"  --verbose
+      - name: Report
+        working-directory: rtlmeter
+        run: |
+          ./rtlmeter report --steps "*" --metrics "*"
